@@ -1,7 +1,12 @@
-This C++ implementation of an AVL tree achieves improved performance for AVL node deletion via the algorithm proposed by Caxton C. Foster in his 1965 article, "A Study of AVL Trees" (Goodyear Aerospace Corporation internal document GER-12158), and also described in the following pre-print article.
+The C++ implementation of an AVL tree achieves improved performance for AVL node deletion via the algorithm proposed by Caxton C. Foster in his 1965 article, "A Study of AVL Trees" (Goodyear Aerospace Corporation internal document GER-12158), and also described in the following pre-print article.
 
 https://arxiv.org/abs/2406.05162
 
-The avlTree.cpp source-code file is an implementation of an AVL tree. The avlMap.cpp source-code file is an implementation of a key-to-value map based on an AVL tree. The words.txt file is a dictionary of words used to test avlMap.cpp.
+The AVL tree implementation (avlTree.h, avlTree.cpp, and testAVLTree.cpp) was transcribed from Nicklaus Wirth's Pascal implementation of the AVL tree in his 1976 textbook, "Algorithms + Data Structures = Programs." A bug in the del procedure was fixed and that procedure was bifurcated to create the eraseLeft and eraseRight functions that confer improved performance for deletion.
 
-The C++ code was created by translating Pascal code from Nicklaus Wirth's textbook, "Algorithms + Data Structures = Programs" and then modifying the del procedure to fix a bug and improve performance as described in the above pre-print article.
+The bottom-up red-black tree implementation (burbTree.h, burbTree.cpp, and testBURBTree.cpp) was copied from Rao Ananda's C++ implementation of the bottom-up red-black tree (https://github.com/anandarao/Red-Black-Tree). The fixInsertRBTree and fixDeleteRBTree functions were renamed fixInsertion and fixErasure respectively and then optimized. Bugs and memory leaks were fixed in the fixDeleteRBTree function.
+
+The top-down red-black tree implementation (tdrbTree.h, tdrbTree.cpp, and testTDRBTree.cpp) was transcribed from Cullen LaKemper's Java implementation of the top-down red-black tree (https://github.com/SangerC/TopDownRedBlackTree). A bug was fixed in the removeStep2B2 method.
+
+The left-leaning red-black tree implementation (llrbTree.h, llrbTree.cpp, and testLLRBTree.cpp) was transcribed from Rene Argento's Java implementation of the left-leaning red-black tree (https://github.com/reneargento/algorithms-sedgewick-wayne/blob/master/src/chapter3/section3/RedBlackBST.java and https://github.com/reneargento/algorithms-sedgewick-wayne/blob/master/src/chapter3/section3/Exercise41_Delete.java). No bugs were detected.
+
