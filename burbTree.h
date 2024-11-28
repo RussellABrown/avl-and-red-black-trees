@@ -42,41 +42,41 @@
  * 
  * Compile with a test program, for example, burbTree.cpp via:
  * 
- * g++ -std=c++11 -O3 burbTree.cpp
+ * g++ -std=c++11 -O3 test_burbTree.cpp
  * 
  * To use recursion instead of iteration, compile via:
  * 
- * g++ -std=c++11 -O3 -D RECURSION
+ * g++ -std=c++11 -O3 -D RECURSION test_burbTree.cpp
  * 
  * To enable selection of a preferred replacement node
  * when a 2-child node is deleted, compile via:
  * 
- * g++ -std=c++11 -O3 -D ENABLE_PREFERRED_TEST burbTree.cpp
+ * g++ -std=c++11 -O3 -D ENABLE_PREFERRED_TEST test_burbTree.cpp
  *
  * To enable selection of a preferred replacment node
  * but force selection of the in-order successor (to
  * assess the overhead relative to no selection of a
  * preferred replacement node), compile via:
  *
- * g++ -std=c++11 -O3 -D ENABLE_PREFERRED_TEST -D FORCE_SUCCESSOR burbTree.cpp
+ * g++ -std=c++11 -O3 -D ENABLE_PREFERRED_TEST -D FORCE_SUCCESSOR test_burbTree.cpp
  * 
  * To invert selection of a preferred replacement node
  * when the balance of the 2-child node is 0, compile via:
  * 
- * g++ -std=c++11 -O3 -D ENABLE_PREFERRED_TEST -D INVERT_PREFERRED_TEST burbTree.cpp
+ * g++ -std=c++11 -O3 -D ENABLE_PREFERRED_TEST -D INVERT_PREFERRED_TEST test_burbTree.cpp
  *
  * To disable the freed list that avoids re-use of new and delete, compile via:
  * 
- * g++ -std=c++11 -O3 -D DISABLE_FREED_LIST burbTree.cpp
+ * g++ -std=c++11 -O3 -D DISABLE_FREED_LIST test_burbTree.cpp
  * 
  * To use a non-static sentinel node nullnode instead of nullptr, compile via:
  * 
- * g++ -std=c++11 -O3 -D NULL_NODE burbTree.cpp
+ * g++ -std=c++11 -O3 -D NULL_NODE test_burbTree.cpp
  * 
  * To use a static sentinel node nullnode instead of nullptr,
  * NOTE that C++17 is required and compile via:
  * 
- * g++ -std=c++17 -O3 -D STATIC_NULL_NODE burbTree.cpp
+ * g++ -std=c++17 -O3 -D STATIC_NULL_NODE test_burbTree.cpp
  */
 
 #ifndef BAYER_GUIBAS_SEDGEWICK_ANANDA_BU_RB_TREE_H

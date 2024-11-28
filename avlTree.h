@@ -39,23 +39,23 @@
  * operations to del. Selection between these two functions
  * reduces the number of rotations required following deletion.
  *
- * Compile with a test program, for example, avlTree.cpp via:
+ * Compile with a test program, for example, test_avlTree.cpp via:
  * 
- * g++ -std=c++11 -O3 avlTree.cpp
+ * g++ -std=c++11 -O3 test_avlTree.cpp
  * 
  * To enable selection of a preferred replacment node
  * when a 2-child node is deleted, compile via:
  * 
- * g++ -std=c++11 -O3 -D ENABLE_PREFERRED_TEST avlTree.cpp
+ * g++ -std=c++11 -O3 -D ENABLE_PREFERRED_TEST test_avlTree.cpp
  * 
  * To invert selection of a preferred replacement node
  * when the balance of the 2-child node is 0, compile via:
  * 
- * g++ -std=c++11 -O3 -D ENABLE_PREFERRED_TEST -D INVERT_PREFERRED_TEST avlTree.cpp
+ * g++ -std=c++11 -O3 -D ENABLE_PREFERRED_TEST -D INVERT_PREFERRED_TEST test_avlTree.cpp
  *
  * To disable the freed list that avoids re-use of new and delete, compile via:
  * 
- * g++ -std=c++11 -O3 -D DISABLE_FREED_LIST avlTree.cpp
+ * g++ -std=c++11 -O3 -D DISABLE_FREED_LIST test_avlTree.cpp
  */
 
 #ifndef ADELSON_VELSKII_LANDIS_WIRTH_AVL_TREE_RECURSE_H

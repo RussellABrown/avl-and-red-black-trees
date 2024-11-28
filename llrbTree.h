@@ -66,16 +66,16 @@
  *
  * To build the test executable, compile via:
  * 
- * g++ -std=c++11 -O3 llrbTree.cpp
+ * g++ -std=c++11 -O3 test_llrbTree.cpp
  *
  * To disable the freed list that avoids re-use of new and delete, compile via:
  * 
- * g++ -std=c++11 -O3 -D DISABLE_FREED_LIST llrbTree.cpp
+ * g++ -std=c++11 -O3 -D DISABLE_FREED_LIST test_llrbTree.cpp
  * 
  * To enable selection of a preferred replacement node
  * when a 2-child node is deleted, compile via:
  * 
- * g++ -std=c++11 -O3 -D ENABLE_PREFERRED_TEST rbTreeIterate.cpp
+ * g++ -std=c++11 -O3 -D ENABLE_PREFERRED_TEST test_llrbTree.cpp
  * 
  * HOWEVER, selection of a preferred replacement node
  * does not work correctly because it is not possible

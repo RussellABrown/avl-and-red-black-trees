@@ -45,11 +45,11 @@
  * 
  * To build the test executable, compile via:
  * 
- * g++ -std=c++11 -O3 tdrbTree.cpp
+ * g++ -std=c++11 -O3 test_tdrbTree.cpp
  *
  * To disable the freed list that avoids re-use of new and delete, compile via:
  * 
- * g++ -std=c++11 -O3 -D DISABLE_FREED_LIST tdrbTree.cpp
+ * g++ -std=c++11 -O3 -D DISABLE_FREED_LIST test_tdrbTree.cpp
  */
 
 #ifndef CULLEN_LAKEMPER_TDRB_TREE_H
