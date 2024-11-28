@@ -2,11 +2,11 @@ The C++ implementation of an AVL tree achieves improved performance for AVL node
 
 https://arxiv.org/abs/2406.05162
 
-The AVL tree implementation (avlTree.h, avlTree.cpp, and testAVLTree.cpp) was transcribed from Nicklaus Wirth's Pascal implementation of the AVL tree in his 1976 textbook, "Algorithms + Data Structures = Programs." A bug in the del procedure was fixed and that procedure was bifurcated to create the eraseLeft and eraseRight functions that confer improved performance for deletion.
+The AVL tree implementation (avlTree.h, test_avlTree.cpp, and testAVLTree.cpp) was transcribed from Nicklaus Wirth's Pascal implementation of the AVL tree in his 1976 textbook, "Algorithms + Data Structures = Programs." A bug in the del procedure was fixed and that procedure was bifurcated to create the eraseLeft and eraseRight functions that confer improved performance for deletion.
 
-The bottom-up red-black tree implementation (burbTree.h, burbTree.cpp, and testBURBTree.cpp) was copied from Rao Ananda's C++ implementation of the bottom-up red-black tree (https://github.com/anandarao/Red-Black-Tree). The fixInsertRBTree and fixDeleteRBTree functions were renamed fixInsertion and fixErasure respectively and then optimized. Bugs and memory leaks were fixed in the fixDeleteRBTree function.
+The bottom-up red-black tree implementation (burbTree.h, test_burbTree.cpp, and testBURBTree.cpp) was copied from Rao Ananda's C++ implementation of the bottom-up red-black tree (https://github.com/anandarao/Red-Black-Tree). The fixInsertRBTree and fixDeleteRBTree functions were renamed fixInsertion and fixErasure respectively and then optimized. Bugs and memory leaks were fixed in the fixDeleteRBTree function.
 
-The top-down red-black tree implementation (tdrbTree.h, tdrbTree.cpp, and testTDRBTree.cpp) was transcribed from Cullen LaKemper's Java implementation of the top-down red-black tree (https://github.com/SangerC/TopDownRedBlackTree). A bug was fixed in the removeStep2B2 method.
+The top-down red-black tree implementation (tdrbTree.h, test_tdrbTree.cpp, and testTDRBTree.cpp) was transcribed from Cullen LaKemper's Java implementation of the top-down red-black tree (https://github.com/SangerC/TopDownRedBlackTree). A bug was fixed in the removeStep2B2 method.
 
-The left-leaning red-black tree implementation (llrbTree.h, llrbTree.cpp, and testLLRBTree.cpp) was transcribed from Rene Argento's Java implementation of the left-leaning red-black tree (https://github.com/reneargento/algorithms-sedgewick-wayne/blob/master/src/chapter3/section3/RedBlackBST.java and https://github.com/reneargento/algorithms-sedgewick-wayne/blob/master/src/chapter3/section3/Exercise41_Delete.java). No bugs were detected.
+The left-leaning red-black tree implementation (llrbTree.h, test_llrbTree.cpp, and testLLRBTree.cpp) was transcribed from Rene Argento's Java implementation of the left-leaning red-black tree (https://github.com/reneargento/algorithms-sedgewick-wayne/blob/master/src/chapter3/section3/RedBlackBST.java and https://github.com/reneargento/algorithms-sedgewick-wayne/blob/master/src/chapter3/section3/Exercise41_Delete.java). No bugs were detected.
 
