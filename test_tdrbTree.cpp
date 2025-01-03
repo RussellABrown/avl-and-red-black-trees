@@ -62,7 +62,29 @@
 #include <sstream>
 #include <string>
 #include <stdexcept>
+#include <utility>
 #include <vector>
+
+/*
+  * Calculate the mean and standard deviation of the elements of a vector.
+  *
+  * Calling parameter:
+  *
+  * vec - a vector
+  * 
+  * return a pair that contains the mean and standard deviation
+  */
+ template <typename T>
+std::pair<double, double> calcMeanStd(std::vector<T> const& vec) {
+  double sum = 0, sum2 = 0;
+  for (size_t i = 0; i < vec.size(); ++i) {
+    double v = static_cast<double>(vec[i]);
+    sum += v;
+    sum2 += v * v;
+  }
+double n = static_cast<double>(vec.size());
+return std::make_pair(sum / n, sqrt((n * sum2) - (sum * sum)) / n);
+}
 
 int main(int argc, char **argv) {
     
@@ -108,6 +130,7 @@ int main(int argc, char **argv) {
     // Create vectors to store the execution times and rotations for each iteration.
     vector<double> insertTime(iterations), searchTime(iterations), deleteTime(iterations);
     vector<size_t> sri(iterations), dri(iterations), sre(iterations), dre(iterations);
+    vector<size_t> ri(iterations), re(iterations);
 
     // Create a vector of unique unsigned integers as large as keys.
     vector<uint32_t> numbers(keys);
@@ -154,6 +177,8 @@ int main(int argc, char **argv) {
         // Record rotation counts for insertion.
         sri[it] = root.singleRotationCount;
         dri[it] = root.doubleRotationCount;
+        // A double rotation also counts 2 single rotations
+        ri[it] = root.singleRotationCount - 2*root.doubleRotationCount;
 
         // Verify that the correct number of nodes were added to the TDRB tree.
         treeSize = root.size();
@@ -205,7 +230,9 @@ int main(int argc, char **argv) {
        // Record rotation counts for deletion.
         sre[it] = root.singleRotationCount;
         dre[it] = root.doubleRotationCount;
-
+        // A double rotation also counts 2 single rotations
+        re[it] = root.singleRotationCount - 2*root.doubleRotationCount;
+        
         // Verify that the TDRB tree is empty.
         if ( root.empty() == false ) {
             ostringstream buffer;
@@ -224,75 +251,47 @@ int main(int argc, char **argv) {
 #endif
     }
 
-    // Compute the means and standard deviations.
-    double sumI = 0, sumI2 = 0, sumS = 0, sumS2 = 0, sumD = 0, sumD2 = 0;
-    double sumsri = 0, sumsri2 = 0, sumdri = 0, sumdri2 = 0, sumri = 0, sumri2 = 0;
-    double sumsre = 0, sumsre2 = 0, sumdre = 0, sumdre2 = 0, sumre = 0, sumre2 = 0;
-    for (size_t i = 0; i < iterations; ++i) {
-        sumI += insertTime[i];
-        sumI2 += insertTime[i] * insertTime[i];
-        sumS += searchTime[i];
-        sumS2 += searchTime[i] * searchTime[i];
-        sumD += deleteTime[i];
-        sumD2 += deleteTime[i] * deleteTime[i];
-        sumsri += sri[i] - 2*dri[i];  // a double rotation also counts 2 single rotations
-        sumsri2 += (sri[i] - 2*dri[i]) * (sri[i] - 2*dri[i]);
-        sumdri += dri[i];
-        sumdri2 += dri[i] * dri[i];
-        sumri += sri[i];
-        sumri2 += sri[i] * sri[i];
-        sumsre += sre[i] - 2*dre[i];  // a double rotation also counts 2 single rotations
-        sumsre2 += (sre[i] - 2*dre[i]) * (sre[i] - 2*dre[i]);
-        sumdre += dre[i];
-        sumdre2 += dre[i] * dre[i];
-        sumre += sre[i];
-        sumre2 += sre[i] * sre[i];
-    }
-    double n = static_cast<double>(iterations);
-    double insertMean = sumI / n;
-    double searchMean = sumS / n;
-    double deleteMean = sumD / n;
-    double sriMean = sumsri / n;
-    double driMean = sumdri / n;
-    double sreMean = sumsre / n;
-    double dreMean = sumdre / n;
-    double riMean = sumri / n;
-    double reMean = sumre / n;
-
-    double insertStdDev = sqrt((n * sumI2) - (sumI * sumI)) / n;
-    double searchStdDev = sqrt((n * sumS2) - (sumS * sumS)) / n;
-    double deleteStdDev = sqrt((n * sumD2) - (sumD * sumD)) / n;
-    double sriStdDev = sqrt((n * sumsri2) - (sumsri * sumsri)) / n;
-    double driStdDev = sqrt((n * sumdri2) - (sumdri * sumdri)) / n;
-    double riStdDev = sqrt((n * sumri2) - (sumri * sumri)) / n;
-    double sreStdDev = sqrt((n * sumsre2) - (sumsre * sumsre)) / n;
-    double dreStdDev = sqrt((n * sumdre2) - (sumdre * sumdre)) / n;
-    double reStdDev = sqrt((n * sumre2) - (sumre * sumre)) / n;
-
-    // Report the statistics.
+    // Report statistics including means and standard deviations.
     cout << endl << "node size = " << root.nodeSize()
          << " bytes\tnumber of keys in tree = " << treeSize
          << "\titerations = " << iterations << endl << endl;
     
-    cout << "insert time = " << setprecision(4) << insertMean
-         << "\tstd dev = " << insertStdDev << endl;
-    cout << "search time = " << setprecision(4) << searchMean
-         << "\tstd dev = " << searchStdDev << endl;
-    cout << "delete time = " << setprecision(4) << deleteMean
-         << "\tstd dev = " << deleteStdDev << endl << endl;
-    
-    cout << "insert single rotate = " << static_cast<size_t>(sriMean)
-         << "\tstd dev = " << static_cast<size_t>(sriStdDev)
-         << "\tdouble rotate = " << static_cast<size_t>(driMean)
-         << "\tstd dev = " << static_cast<size_t>(driStdDev)
-         << "\ttotal rotate = " << static_cast<size_t>(riMean)
-         << "\tstd dev = " << static_cast<size_t>(riStdDev) << endl;
-    cout << "delete single rotate = " << static_cast<size_t>(sreMean)
-         << "\tstd dev = " << static_cast<size_t>(sreStdDev)
-         << "\tdouble rotate = " << static_cast<size_t>(dreMean)
-         << "\tstd dev = " << static_cast<size_t>(dreStdDev)
-         << "\ttotal rotate = " << static_cast<size_t>(reMean)
-         << "\tstd dev = " << static_cast<size_t>(reStdDev) << endl << endl;
+    auto timePair = calcMeanStd<double>(insertTime);
+    cout << "insert time = " << setprecision(4) << timePair.first
+         << "\tstd dev = " << timePair.second << " seconds" << endl;
+         
+    timePair = calcMeanStd<double>(searchTime);
+    cout << "search time = " << setprecision(4) << timePair.first
+         << "\tstd dev = " << timePair.second << " seconds" << endl;
+         
+    timePair = calcMeanStd<double>(deleteTime);
+    cout << "delete time = " << setprecision(4) << timePair.first
+         << "\tstd dev = " << timePair.second << " seconds" << endl << endl;
+
+    timePair = calcMeanStd<size_t>(ri);
+    cout << "insert single rotate = " << static_cast<size_t>(timePair.first)
+         << "\tstd dev = " << static_cast<size_t>(timePair.second);
+
+    timePair = calcMeanStd<size_t>(dri);
+    cout << "\tdouble rotate = " << static_cast<size_t>(timePair.first)
+         << "\tstd dev = " << static_cast<size_t>(timePair.second);
+
+    timePair = calcMeanStd<size_t>(sri);
+    cout << "\ttotal rotate = " << static_cast<size_t>(timePair.first)
+         << "\tstd dev = " << static_cast<size_t>(timePair.second) << endl << endl;
+
+    timePair = calcMeanStd<size_t>(re);
+    cout << "delete single rotate = " << static_cast<size_t>(timePair.first)
+         << "\tstd dev = " << static_cast<size_t>(timePair.second);
+
+    timePair = calcMeanStd<size_t>(dre);
+    cout << "\tdouble rotate = " << static_cast<size_t>(timePair.first)
+         << "\tstd dev = " << static_cast<size_t>(timePair.second);
+
+    timePair = calcMeanStd<size_t>(sre);
+    cout << "\ttotal rotate = " << static_cast<size_t>(timePair.first)
+         << "\tstd dev = " << static_cast<size_t>(timePair.second) << endl << endl;
+
     // Clear the TDRB tree.
     root.clear();
 

@@ -62,7 +62,29 @@
 #include <sstream>
 #include <string>
 #include <stdexcept>
+#include <utility>
 #include <vector>
+
+/*
+  * Calculate the mean and standard deviation of the elements of a vector.
+  *
+  * Calling parameter:
+  *
+  * vec - a vector
+  * 
+  * return a pair that contains the mean and standard deviation
+  */
+ template <typename T>
+std::pair<double, double> calcMeanStd(std::vector<T> const& vec) {
+  double sum = 0, sum2 = 0;
+  for (size_t i = 0; i < vec.size(); ++i) {
+    double v = static_cast<double>(vec[i]);
+    sum += v;
+    sum2 += v * v;
+  }
+double n = static_cast<double>(vec.size());
+return std::make_pair(sum / n, sqrt((n * sum2) - (sum * sum)) / n);
+}
 
 int main(int argc, char **argv) {
     
@@ -108,6 +130,7 @@ int main(int argc, char **argv) {
     // Create vectors to store the execution times and rotations for each iteration.
     vector<double> insertTime(iterations), searchTime(iterations), deleteTime(iterations);
     vector<size_t> rli(iterations), rri(iterations), rle(iterations), rre(iterations);
+    vector<size_t> ri(iterations), re(iterations);
 
     // Create a vector of unique unsigned integers as large as keys.
     vector<int> numbers(keys);
@@ -175,6 +198,7 @@ int main(int argc, char **argv) {
         // Record rotation counts for insertion.
         rli[it] = root.rotateL;
         rri[it] = root.rotateR;
+        ri[it] = root.rotateL + root.rotateR;
 
         // Verify that the correct number of nodes were added to the BURB tree.
         treeSize = root.size();
@@ -226,6 +250,7 @@ int main(int argc, char **argv) {
         // Record rotation counts for deletion.
         rle[it] = root.rotateL;
         rre[it] = root.rotateR;
+        re[it] = root.rotateL + root.rotateR;
 
         // Verify that the BURB tree is empty.
         if ( root.empty() == false ) {
@@ -245,76 +270,47 @@ int main(int argc, char **argv) {
 #endif
     }
 
-    // Compute means and standard deviations.
-    double sumI = 0, sumI2 = 0, sumS = 0, sumS2 = 0, sumD = 0, sumD2 = 0;
-    double sumrli = 0, sumrli2 = 0, sumrri = 0, sumrri2 = 0, sumri = 0, sumri2 = 0;
-    double sumrle = 0, sumrle2 = 0, sumrre = 0, sumrre2 = 0, sumre = 0, sumre2 = 0;
-    for (size_t i = 0; i < iterations; ++i) {
-        sumI += insertTime[i];
-        sumI2 += insertTime[i] * insertTime[i];
-        sumS += searchTime[i];
-        sumS2 += searchTime[i] * searchTime[i];
-        sumD += deleteTime[i];
-        sumD2 += deleteTime[i] * deleteTime[i];
-        sumrli += rli[i];
-        sumrli2 += rli[i] * rli[i];
-        sumrri += rri[i];
-        sumrri2 += rri[i] * rri[i];
-        sumri += rli[i] + rri[i];
-        sumri2 += (rli[i] + rri[i]) * (rli[i] + rri[i]);
-        sumrle += rle[i];
-        sumrle2 += rle[i] * rle[i];
-        sumrre += rre[i];
-        sumrre2 += rre[i] * rre[i];
-        sumre += rle[i] + rre[i];
-        sumre2 += (rle[i] + rre[i]) * (rle[i] + rre[i]);
-    }
-    double n = static_cast<double>(iterations);
-    double insertMean = sumI / n;
-    double searchMean = sumS / n;
-    double deleteMean = sumD / n;
-    double rliMean = sumrli / n;
-    double rriMean = sumrri / n;
-    double rleMean = sumrle / n;
-    double rreMean = sumrre / n;
-    double riMean = sumri / n;
-    double reMean = sumre / n;
-
-    double insertStdDev = sqrt((n * sumI2) - (sumI * sumI)) / n;
-    double searchStdDev = sqrt((n * sumS2) - (sumS * sumS)) / n;
-    double deleteStdDev = sqrt((n * sumD2) - (sumD * sumD)) / n;
-    double rliStdDev = sqrt((n * sumrli2) - (sumrli * sumrli)) / n;
-    double rriStdDev = sqrt((n * sumrri2) - (sumrri * sumrri)) / n;
-    double riStdDev = sqrt((n * sumri2) - (sumri * sumri)) / n;
-    double rleStdDev = sqrt((n * sumrle2) - (sumrle * sumrle)) / n;
-    double rreStdDev = sqrt((n * sumrre2) - (sumrre * sumrre)) / n;
-    double reStdDev = sqrt((n * sumre2) - (sumre * sumre)) / n;
-
-    // Report the statistics.
+    // Report statistics including means and standard deviations.
     cout << endl << "node size = " << root.nodeSize()
          << " bytes\tnumber of keys in tree = " << treeSize
          << "\titerations = " << iterations << endl << endl;
     
-    cout << "insert time = " << setprecision(4) << insertMean
-         << "\tstd dev = " << insertStdDev << endl;
-    cout << "search time = " << setprecision(4) << searchMean
-         << "\tstd dev = " << searchStdDev << endl;
-    cout << "delete time = " << setprecision(4) << deleteMean
-         << "\tstd dev = " << deleteStdDev << endl << endl;
-    
-    cout << "insert rotate left = " << static_cast<size_t>(rliMean)
-         << "\tstd dev = " << static_cast<size_t>(rliStdDev)
-         << "\trotate right = " << static_cast<size_t>(rriMean)
-         << "\tstd dev = " << static_cast<size_t>(rriStdDev)
-         << "\ttotal rotate = " << static_cast<size_t>(riMean)
-         << "\tstd dev = " << static_cast<size_t>(riStdDev) << endl;
-    cout << "delete rotate left = " << static_cast<size_t>(rleMean)
-         << "\tstd dev = " << static_cast<size_t>(rleStdDev)
-         << "\trotate right = " << static_cast<size_t>(rreMean)
-         << "\tstd dev = " << static_cast<size_t>(rreStdDev)
-         << "\ttotal rotate = " << static_cast<size_t>(reMean)
-         << "\tstd dev = " << static_cast<size_t>(reStdDev) << endl << endl;
+    auto timePair = calcMeanStd<double>(insertTime);
+    cout << "insert time = " << setprecision(4) << timePair.first
+         << "\tstd dev = " << timePair.second << " seconds" << endl;
+         
+    timePair = calcMeanStd<double>(searchTime);
+    cout << "search time = " << setprecision(4) << timePair.first
+         << "\tstd dev = " << timePair.second << " seconds" << endl;
+         
+    timePair = calcMeanStd<double>(deleteTime);
+    cout << "delete time = " << setprecision(4) << timePair.first
+         << "\tstd dev = " << timePair.second << " seconds" << endl << endl;
 
+    timePair = calcMeanStd<size_t>(rli);
+    cout << "insert rotate left = " << static_cast<size_t>(timePair.first)
+         << "\tstd dev = " << static_cast<size_t>(timePair.second);
+
+    timePair = calcMeanStd<size_t>(rri);
+    cout << "\trotate right = " << static_cast<size_t>(timePair.first)
+         << "\tstd dev = " << static_cast<size_t>(timePair.second);
+
+    timePair = calcMeanStd<size_t>(ri);
+    cout << "\ttotal rotate = " << static_cast<size_t>(timePair.first)
+         << "\tstd dev = " << static_cast<size_t>(timePair.second) << endl << endl;
+
+    timePair = calcMeanStd<size_t>(rle);
+    cout << "delete rotate left = " << static_cast<size_t>(timePair.first)
+         << "\tstd dev = " << static_cast<size_t>(timePair.second);
+
+    timePair = calcMeanStd<size_t>(rre);
+    cout << "\trotate right = " << static_cast<size_t>(timePair.first)
+         << "\tstd dev = " << static_cast<size_t>(timePair.second);
+
+    timePair = calcMeanStd<size_t>(re);
+    cout << "\ttotal rotate = " << static_cast<size_t>(timePair.first)
+         << "\tstd dev = " << static_cast<size_t>(timePair.second) << endl << endl;
+         
     // Clear the BURB tree.
     root.clear();
 
