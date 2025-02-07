@@ -10,3 +10,5 @@ The top-down red-black tree implementation (tdrbTree.h, test_tdrbTree.cpp, and t
 
 The left-leaning red-black tree implementation (llrbTree.h, test_llrbTree.cpp, and testLLRBTree.cpp) was transcribed from Rene Argento's Java implementation of the left-leaning red-black tree (https://github.com/reneargento/algorithms-sedgewick-wayne/blob/master/src/chapter3/section3/RedBlackBST.java and https://github.com/reneargento/algorithms-sedgewick-wayne/blob/master/src/chapter3/section3/Exercise41_Delete.java). No bugs were detected.
 
+The hybrid red-black tree implementation (hyrbTree.h, test_hyrbTree.cpp) uses top-down insertion and bottom-up deletion. Top-down insertion is slightly faster than bottom-up insertion. Bottom-up deletion is significantly faster than top-down deletion.
+
