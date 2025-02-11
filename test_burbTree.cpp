@@ -35,6 +35,10 @@
  * 
  * g++ -std=c++11 -O3 -o test_burbTree test_burbTree.cpp
  * 
+ * To insert and delete the keys in increasing order, compile via:
+ * 
+ * g++ -std=c++11 -O3 -D INORDER -o test_burbTree test_burbTree.cpp
+ * 
  * The burbTree.h file describes other compilation options.
  * 
  * Usage:
@@ -182,7 +186,9 @@ int main(int argc, char **argv) {
         root.rotateL = root.rotateR = 0;
 
         // Shuffle the keys and add each key to the BURB tree.
+#ifndef INORDER
         shuffle(numbers.begin(), numbers.end(), g);
+#endif
         auto startTime = std::chrono::steady_clock::now();
         for (size_t i = 0; i < numbers.size(); ++i) { 
             if ( root.insert( numbers[i] ) == false) {
@@ -234,7 +240,9 @@ int main(int argc, char **argv) {
         // Reshuffle the keys prior to deleting each key from the BURB tree
         // because deletion rebalances the tree and hence the insertion
         // order of the keys may influence the performance of deletion.
+#ifndef INORDER
         shuffle(numbers.begin(), numbers.end(), g);
+#endif
         startTime = std::chrono::steady_clock::now();
         for (size_t i = 0; i < numbers.size(); i++) {
             if ( root.erase( numbers[i] ) == false ) {

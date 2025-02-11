@@ -1,5 +1,5 @@
 /*
- * Modifications Copyright (c) 2024 Russell A. Brown
+ * Copyright (c) 2024 Russell A. Brown
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -29,30 +29,26 @@
  */
 
 /*
- * Left-leaning red-black tree test program
+ * std::set test program
  *
  * To build the test executable, compile via:
  * 
- * g++ -std=c++11 -O3 -o test_llrbTree test_llrbTree.cpp
+ * g++ -std=c++20 -O3 -o test_stdSet test_stdSet.cpp
  * 
  * To insert and delete the keys in increasing order, compile via:
  * 
- * g++ -std=c++11 -O3 -D INORDER -o test_llrbTree test_llrbTree.cpp
- * 
- * The llrbTree.h file describes other compilation options.
+ * g++ -std=c++20 -O3 -D INORDER -o test_stdSet test_stdSet.cpp
  * 
  * Usage:
  * 
- * test_llrbTree [-k K] [-i I]
+ * test_stdSet [-k K] [-i I]
  * 
  * where the command-line options are interpreted as follows.
  * 
- * -k The number of keys to insert into the LLRB tree
+ * -k The number of keys to insert into the set
  * 
  * -i The number of times to iterate the test
  */
-
-#include "llrbTree.h"
 
 #include <algorithm>
 #include <chrono>
@@ -63,32 +59,11 @@
 #include <iomanip>
 #include <iostream>
 #include <random>
+#include <set>
 #include <sstream>
 #include <string>
 #include <stdexcept>
-#include <utility>
 #include <vector>
-
-/*
-  * Calculate the mean and standard deviation of the elements of a vector.
-  *
-  * Calling parameter:
-  *
-  * vec - a vector
-  * 
-  * return a pair that contains the mean and standard deviation
-  */
- template <typename T>
-std::pair<double, double> calcMeanStd(std::vector<T> const& vec) {
-  double sum = 0, sum2 = 0;
-  for (size_t i = 0; i < vec.size(); ++i) {
-    double v = static_cast<double>(vec[i]);
-    sum += v;
-    sum2 += v * v;
-  }
-double n = static_cast<double>(vec.size());
-return std::make_pair(sum / n, sqrt((n * sum2) - (sum * sum)) / n);
-}
 
 int main(int argc, char **argv) {
     
@@ -96,6 +71,7 @@ int main(int argc, char **argv) {
     using std::endl;
     using std::ostringstream;
     using std::runtime_error;
+    using std::set;
     using std::setprecision;
     using std::shuffle;
     using std::string;
@@ -131,10 +107,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    // Create vectors to store the execution times and rotations for each iteration.
+    // Create vectors to store the execution times for each iteration.
     vector<double> insertTime(iterations), searchTime(iterations), deleteTime(iterations);
-    vector<size_t> rli(iterations), rri(iterations), rle(iterations), rre(iterations);
-    vector<size_t> ri(iterations), re(iterations);
 
     // Create a vector of unique unsigned integers as large as keys.
     vector<uint32_t> numbers(keys);
@@ -145,32 +119,20 @@ int main(int argc, char **argv) {
     // Prepare to shuffle the vector of integers.
     std::mt19937_64 g(std::mt19937_64::default_seed);
 
-    // Create an RB tree that has integer keys and preallocate its freed list.
-    llrbTree<uint32_t> root;
-    root.freedPreallocate( keys, 0 );
-#ifndef DISABLE_FREED_LIST
-    if ( root.freedSize() != keys ) {
-        ostringstream buffer;
-        buffer << endl << "freed list size following pre-allocate = " << root.freedSize()
-               << "  != number of keys = " << keys << endl;
-        throw runtime_error(buffer.str());
-    }
-#endif
+    // Create std::set that has integer keys.
+    set<uint32_t> root;
 
-    // Build and test the RB tree.
+    // Build and test std::set.
     size_t treeSize;
     for (size_t it = 0; it < iterations; ++it) {
 
-        // Reset the rotation counters to 0.
-        root.rotateL = root.rotateR = 0;
-
-        // Shuffle the keys and add each key to the LLRB tree.
+        // Shuffle the keys and insert each key into std::set.
 #ifndef INORDER
         shuffle(numbers.begin(), numbers.end(), g);
 #endif
         auto startTime = std::chrono::steady_clock::now();
-        for (size_t i = 0; i < numbers.size(); ++i) { 
-            if ( root.insert( numbers[i] ) == false) {
+        for (size_t i = 0; i < numbers.size(); ++i) {
+            if ( root.insert( numbers[i] ).second == false) {
                 ostringstream buffer;
                 buffer << endl << "key " << numbers[i] << " is already in tree for insert" << endl;
                 throw runtime_error(buffer.str());
@@ -180,32 +142,14 @@ int main(int argc, char **argv) {
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
         insertTime[it] = static_cast<double>(duration.count()) / 1000000.;
 
-        // Record rotation counts for insertion.
-        rli[it] = root.rotateL;
-        rri[it] = root.rotateR;
-        ri[it] = root.rotateL + root.rotateR;
-
-        // Verify that the correct number of nodes were added to the LLRB tree.
-        treeSize = root.size();
-        if (treeSize != numbers.size()) {
-            ostringstream buffer;
-            buffer << endl << "expected size for tree = " << treeSize
-                   << " differs from actual size = " << numbers.size() << endl;
-            throw runtime_error(buffer.str());
-        }
-
-        // Verify that each path to the bottom of the string tree has an equal
-        // number of BLACK nodes and check the validity of the tree.
-        root.checkTree();
-
-        // No need to reshuffle the keys prior to searching the LLRB tree
+        // No need to reshuffle the keys prior to searching std::set
         // for each key because search does not rebalance the tree and
         // hence the insertion order of the keys is irrelevant to search.
         startTime = std::chrono::steady_clock::now();
         for (size_t i = 0; i < numbers.size(); ++i) {
-            if ( root.contains( numbers[i] ) == false ) {
+            if ( root.contains( numbers[i] ) == false ) { // contains() requires C++ 20
                 ostringstream buffer;
-                buffer << endl << "key " << numbers[i] << " is not in tree for contains" << endl;
+                buffer << endl << "key " << numbers[i] << " is not in set for contains" << endl;
                 throw runtime_error(buffer.str());
             }
         }
@@ -213,20 +157,17 @@ int main(int argc, char **argv) {
         duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
         searchTime[it] = static_cast<double>(duration.count()) / 1000000.;
 
-        // Reset the rotation counters to 0.
-        root.rotateL = root.rotateR = 0;
-
-        // Reshuffle the keys prior to deleting each key from the LLRB tree
+        // Reshuffle the keys prior to deleting each key from std::set
         // because deletion rebalances the tree and hence the insertion
         // order of the keys may influence the performance of deletion.
 #ifndef INORDER
         shuffle(numbers.begin(), numbers.end(), g);
 #endif
         startTime = std::chrono::steady_clock::now();
-        for (size_t i = 0; i < numbers.size(); i++) {
+        for (size_t i = 0; i < numbers.size(); ++i) {
             if ( root.erase( numbers[i] ) == false ) {
                 ostringstream buffer;
-                buffer << endl << "key " << numbers[i] << " is not in tree for erase" << endl;
+                buffer << endl << "key " << numbers[i] << " is not in set for erase" << endl;
                 throw runtime_error(buffer.str());
             }
         }
@@ -234,71 +175,44 @@ int main(int argc, char **argv) {
         duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
         deleteTime[it] = static_cast<double>(duration.count()) / 1000000.;
 
-        // Record rotation counts for deletion.
-        rle[it] = root.rotateL;
-        rre[it] = root.rotateR;
-        re[it] = root.rotateL + root.rotateR;
-
-        // Verify that the RB tree is empty.
+        // Verify that the std::set is empty
         if ( root.empty() == false ) {
             ostringstream buffer;
-            buffer << endl << root.size() << " nodes remain in tree following erasure" << endl;
+            buffer << endl << root.size() << " keys remain in set following erasure" << endl;
             throw runtime_error(buffer.str());
         }
-
-        // Check the size of the freed list.
-#ifndef DISABLE_FREED_LIST
-        if ( root.freedSize() != keys ) {
-            ostringstream buffer;
-            buffer << endl << "freed list size following erasure = " << root.freedSize()
-                << "  != number of keys = " << keys << endl;
-            throw runtime_error(buffer.str());
-        }
-#endif
     }
 
-    // Report statistics including means and standard deviations.
-    cout << endl << "node size = " << root.nodeSize()
-         << " bytes\tnumber of keys in tree = " << treeSize
+    // Compute the means and standard deviations.
+    double sumI = 0, sumI2 = 0, sumS = 0, sumS2 = 0, sumD = 0, sumD2 = 0;
+    for (size_t i = 0; i < iterations; ++i) {
+        sumI += insertTime[i];
+        sumI2 += insertTime[i] * insertTime[i];
+        sumS += searchTime[i];
+        sumS2 += searchTime[i] * searchTime[i];
+        sumD += deleteTime[i];
+        sumD2 += deleteTime[i] * deleteTime[i];
+    }
+    double n = static_cast<double>(iterations);
+    double insertMean = sumI / n;
+    double searchMean = sumS / n;
+    double deleteMean = sumD / n;
+    double insertStdDev = sqrt((n * sumI2) - (sumI * sumI)) / n;
+    double searchStdDev = sqrt((n * sumS2) - (sumS * sumS)) / n;
+    double deleteStdDev = sqrt((n * sumD2) - (sumD * sumD)) / n;
+
+    // Report the statistics.
+    cout << endl << "number of keys in set = " << keys
          << "\titerations = " << iterations << endl << endl;
     
-    auto timePair = calcMeanStd<double>(insertTime);
-    cout << "insert time = " << setprecision(4) << timePair.first
-         << "\tstd dev = " << timePair.second << " seconds" << endl;
-         
-    timePair = calcMeanStd<double>(searchTime);
-    cout << "search time = " << setprecision(4) << timePair.first
-         << "\tstd dev = " << timePair.second << " seconds" << endl;
-         
-    timePair = calcMeanStd<double>(deleteTime);
-    cout << "delete time = " << setprecision(4) << timePair.first
-         << "\tstd dev = " << timePair.second << " seconds" << endl << endl;
+    cout << "insert time = " << setprecision(4) << insertMean
+         << "\tstd dev = " << insertStdDev << endl;
+    cout << "search time = " << setprecision(4) << searchMean
+         << "\tstd dev = " << searchStdDev << endl;
+    cout << "delete time = " << setprecision(4) << deleteMean
+         << "\tstd dev = " << deleteStdDev << endl << endl;
 
-    timePair = calcMeanStd<size_t>(rli);
-    cout << "insert rotate left = " << static_cast<size_t>(timePair.first)
-         << "\tstd dev = " << static_cast<size_t>(timePair.second);
-
-    timePair = calcMeanStd<size_t>(rri);
-    cout << "\trotate right = " << static_cast<size_t>(timePair.first)
-         << "\tstd dev = " << static_cast<size_t>(timePair.second);
-
-    timePair = calcMeanStd<size_t>(ri);
-    cout << "\ttotal rotate = " << static_cast<size_t>(timePair.first)
-         << "\tstd dev = " << static_cast<size_t>(timePair.second) << endl << endl;
-
-    timePair = calcMeanStd<size_t>(rle);
-    cout << "delete rotate left = " << static_cast<size_t>(timePair.first)
-         << "\tstd dev = " << static_cast<size_t>(timePair.second);
-
-    timePair = calcMeanStd<size_t>(rre);
-    cout << "\trotate right = " << static_cast<size_t>(timePair.first)
-         << "\tstd dev = " << static_cast<size_t>(timePair.second);
-
-    timePair = calcMeanStd<size_t>(re);
-    cout << "\ttotal rotate = " << static_cast<size_t>(timePair.first)
-         << "\tstd dev = " << static_cast<size_t>(timePair.second) << endl << endl;
-         
-    // Clear the LLRB tree.
+    // Clear the set.
     root.clear();
 
     return 0;

@@ -35,6 +35,10 @@
  * 
  * g++ -std=c++11 -O3 -o test_avlTree test_avlTree.cpp
  * 
+ * To insert and delete the keys in increasing order, compile via:
+ * 
+ * g++ -std=c++11 -O3 -D INORDER -o test_avlTree test_avlTree.cpp
+ * 
  * The avlTree.h file describes compilation options.
  * 
  * Usage:
@@ -162,7 +166,9 @@ int main(int argc, char **argv) {
         root.lli = root.lri = root.rli = root.rri = 0;
 
         // Shuffle the keys and insert each key into the AVL tree.
+#ifndef INORDER
         shuffle(numbers.begin(), numbers.end(), g);
+#endif
         auto startTime = std::chrono::steady_clock::now();
         for (size_t i = 0; i < numbers.size(); ++i) {
             if ( root.insert( numbers[i] ) == false) {
@@ -215,7 +221,9 @@ int main(int argc, char **argv) {
         // Reshuffle the keys prior to deleting each key from the AVL tree
         // because deletion rebalances the tree and hence the insertion
         // order of the keys may influence the performance of deletion.
+#ifndef INORDER
         shuffle(numbers.begin(), numbers.end(), g);
+#endif
         startTime = std::chrono::steady_clock::now();
         for (size_t i = 0; i < numbers.size(); ++i) {
             if ( root.erase( numbers[i] ) == false ) {
