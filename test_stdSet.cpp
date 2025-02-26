@@ -35,9 +35,17 @@
  * 
  * g++ -std=c++20 -O3 -o test_stdSet test_stdSet.cpp
  * 
- * To insert and delete the keys in increasing order, compile via:
+ * To insert the keys in increasing, not random, order, compile via:
  * 
- * g++ -std=c++20 -O3 -D INORDER -o test_stdSet test_stdSet.cpp
+ * g++ -std=c++11 -O3 -D INSERT_INORDER -o test_stdSet test_stdSet.cpp
+ * 
+ * To delete the keys in increasing, not random, order, compile via:
+ * 
+ * g++ -std=c++11 -O3 -D DELETE_INORDER -o test_stdSet test_stdSet.cpp
+ * 
+ * To delete the keys in decreasing, not random, order, compile via:
+ * 
+ * g++ -std=c++11 -O3 -D DELETE_REVORDER -o test_burbTree test_stdSet.cpp
  * 
  * Usage:
  * 
@@ -110,11 +118,12 @@ int main(int argc, char **argv) {
     // Create vectors to store the execution times for each iteration.
     vector<double> insertTime(iterations), searchTime(iterations), deleteTime(iterations);
 
-    // Create a vector of unique unsigned integers as large as keys.
-    vector<uint32_t> numbers(keys);
+    // Create two vectors of unique unsigned integers as large as keys.
+    vector<uint32_t> insertNumbers(keys);
     for (size_t i = 0; i < keys; ++i) {
-        numbers[i] = i;
+        insertNumbers[i] = i;
     }
+    vector<uint32_t> deleteNumbers(insertNumbers);
 
     // Prepare to shuffle the vector of integers.
     std::mt19937_64 g(std::mt19937_64::default_seed);
@@ -127,14 +136,14 @@ int main(int argc, char **argv) {
     for (size_t it = 0; it < iterations; ++it) {
 
         // Shuffle the keys and insert each key into std::set.
-#ifndef INORDER
-        shuffle(numbers.begin(), numbers.end(), g);
+#ifndef INSERT_INORDER
+        shuffle(insertNumbers.begin(), insertNumbers.end(), g);
 #endif
         auto startTime = std::chrono::steady_clock::now();
-        for (size_t i = 0; i < numbers.size(); ++i) {
-            if ( root.insert( numbers[i] ).second == false) {
+        for (size_t i = 0; i < insertNumbers.size(); ++i) {
+            if ( root.insert( insertNumbers[i] ).second == false) {
                 ostringstream buffer;
-                buffer << endl << "key " << numbers[i] << " is already in tree for insert" << endl;
+                buffer << endl << "key " << insertNumbers[i] << " is already in tree for insert" << endl;
                 throw runtime_error(buffer.str());
             }
         }
@@ -146,10 +155,10 @@ int main(int argc, char **argv) {
         // for each key because search does not rebalance the tree and
         // hence the insertion order of the keys is irrelevant to search.
         startTime = std::chrono::steady_clock::now();
-        for (size_t i = 0; i < numbers.size(); ++i) {
-            if ( root.contains( numbers[i] ) == false ) { // contains() requires C++ 20
+        for (size_t i = 0; i < insertNumbers.size(); ++i) {
+            if ( root.contains( insertNumbers[i] ) == false ) { // contains() requires C++ 20
                 ostringstream buffer;
-                buffer << endl << "key " << numbers[i] << " is not in set for contains" << endl;
+                buffer << endl << "key " << insertNumbers[i] << " is not in set for contains" << endl;
                 throw runtime_error(buffer.str());
             }
         }
@@ -160,14 +169,19 @@ int main(int argc, char **argv) {
         // Reshuffle the keys prior to deleting each key from std::set
         // because deletion rebalances the tree and hence the insertion
         // order of the keys may influence the performance of deletion.
-#ifndef INORDER
-        shuffle(numbers.begin(), numbers.end(), g);
+#if !defined(DELETE_INORDER) && !defined(DELETE_REVORDER)
+        shuffle(deleteNumbers.begin(), deleteNumbers.end(), g);
 #endif
         startTime = std::chrono::steady_clock::now();
-        for (size_t i = 0; i < numbers.size(); ++i) {
-            if ( root.erase( numbers[i] ) == false ) {
+#ifndef DELETE_REVORDER
+        for (size_t i = 0; i < deleteNumbers.size(); ++i)
+#else
+        for (int64_t i = deleteNumbers.size()-1; i >= 0; --i)
+#endif
+        {
+            if ( root.erase( deleteNumbers[i] ) == false ) {
                 ostringstream buffer;
-                buffer << endl << "key " << numbers[i] << " is not in set for erase" << endl;
+                buffer << endl << "key " << deleteNumbers[i] << " is not in set for erase" << endl;
                 throw runtime_error(buffer.str());
             }
         }

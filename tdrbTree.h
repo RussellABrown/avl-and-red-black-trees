@@ -50,6 +50,14 @@
  * To disable the freed list that avoids re-use of new and delete, compile via:
  * 
  * g++ -std=c++11 -O3 -D DISABLE_FREED_LIST test_tdrbTree.cpp
+ * 
+ * To preallocate the freed list as a vector of red-black tree nodes, compile via:
+ * 
+ * g++ -std=c++11 -O3 -D PREALLOCATE test_tdrbTree.cpp
+ * 
+ * To enable parent pointers, compile via:
+ * 
+ * g++ -std=c++11 -O3 -D PARENT test_tdrbTree.cpp
  */
 
 #ifndef CULLEN_LAKEMPER_TDRB_TREE_H
@@ -79,12 +87,25 @@ private:
         K key;
         color_t color;
         Node *left, *right;
+#ifdef PARENT
+        Node* parent;
+#endif
 
-public:
         Node( K const& x ) {
             key = x;
             color = RED;
             left = right = nullptr;
+        #ifdef PARENT
+            parent = nullptr;
+        #endif
+        }
+
+        Node() {
+            color = RED;
+            left = right = nullptr;
+#ifdef PARENT
+            parent = nullptr;
+#endif
         }
     };
         
@@ -94,16 +115,27 @@ public:
     }
 
 private:
-    Node *root, *freed;
-    size_t count;
-  
+    Node* root;     // the root of the tree
+    size_t count;   // the number of nodes in the tree
+
+#ifndef DISABLE_FREED_LIST
+    Node* freed;    // the freed list
+#ifdef PREALLOCATE
+    std::vector<Node> nodes;
+#endif
+#endif
+
 public:
     size_t singleRotationCount, doubleRotationCount;
 
 public:
     tdrbTree() {
-        root = freed = nullptr;
+        root = nullptr;
         count = singleRotationCount = doubleRotationCount = 0;
+        
+#ifndef DISABLE_FREED_LIST
+        freed = nullptr;
+#endif
     }
     
 public:
@@ -151,14 +183,19 @@ public:
     }
 
     /* Delete every node from the freed list. */
-private:
+    private:
     void clearFreed() {
 #ifndef DISABLE_FREED_LIST
+#ifndef PREALLOCATE
         while ( freed != nullptr ) {
             Node* next = freed->left;
             delete freed;
             freed = next;
         }
+#else
+        nodes.clear();
+#endif
+        freed = nullptr;
 #endif
     }
 
@@ -182,16 +219,24 @@ public:
      * Calling parameters:
      *
      * @param n (IN) the number of nodes to prepend
-     * @param x (IN) a dummy key argument
      */
 public:
-    void freedPreallocate( size_t const n, K const& x ) {
- #ifndef DISABLE_FREED_LIST
+    void freedPreallocate( size_t const n ) {
+#ifndef DISABLE_FREED_LIST
+#ifndef PREALLOCATE
        for (size_t i = 0; i < n; ++i) {
-            Node* p = new Node( x );
+            Node* p = new Node();
             p->left = freed;
             freed = p;
-       }
+        }
+#else
+        nodes.resize(n);
+        for (size_t i = 0; i < n; ++i) {
+            Node* p = &nodes[i];
+            p->left = freed;
+            freed = p;
+        }
+#endif
 #endif
     }
 
@@ -234,6 +279,9 @@ private:
             ptr->taille = 1;
 #endif
             ptr->left = ptr->right = nullptr;
+#ifdef PARENT
+            ptr->parent = nullptr;
+#endif
             return ptr;
         } else
 #endif
@@ -639,6 +687,9 @@ private:
 private:
     inline void addToLeft(Node* m, Node* p, Node* gp, K const& n) { 
 		m->left = newNode(n);
+#ifdef PARENT
+        m->left->parent = m;
+#endif
 		if (m->color == RED && p != nullptr) { 
 			Node* x;
 			if (p->left == nullptr) {
@@ -659,6 +710,9 @@ private:
 private:
     inline void addToRight(Node* m, Node* p, Node* gp, K const& n) { 
 		m->right = newNode(n);
+#ifdef PARENT
+        m->right->parent = m;
+#endif
 		if (m->color == RED && p != nullptr) { 
 			Node* x;
             if (p->right == nullptr) {
@@ -692,6 +746,25 @@ private:
 	}
 
 private:
+#ifdef PARENT
+    inline Node* singleLeftRotation(Node* x) {
+        Node* n = x->right;
+        x->right = n->left;
+        if (x->right != nullptr) {
+            x->right->parent = x;
+        }
+        n->parent = x->parent;
+        n->left = x;
+        x->parent = n;
+        n->color = BLACK;
+        if (x->right != nullptr) {
+            n->right->color = RED;
+        }
+        n->left->color = RED;
+        ++singleRotationCount;
+        return n;
+    }
+#else
     inline Node* singleLeftRotation(Node* x) {
         Node* n = x->right;
         x->right = n->left;
@@ -704,8 +777,28 @@ private:
         ++singleRotationCount;
         return n;
     }
+#endif
 
 private:
+#ifdef PARENT
+    inline Node* singleRightRotation(Node* x) {
+        Node* n = x->left;
+        x->left = n->right;
+        if (x->left != nullptr) {
+            x->left->parent = x;
+        }
+        n->parent = x->parent;
+        n->right = x;
+        x->parent = n;
+        n->color = BLACK;
+        n->right->color = RED;
+        if (x->left != nullptr) {
+            n->left->color = RED;
+        }
+        ++singleRotationCount;
+        return n;
+    }
+#else
     inline Node* singleRightRotation(Node* x) {
         Node* n = x->left;
         x->left = n->right;
@@ -718,6 +811,7 @@ private:
         ++singleRotationCount;
         return n;
     }
+#endif
     
 private:
     inline Node* doubleRightRotation(Node* x) {

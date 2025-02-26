@@ -43,6 +43,10 @@
  * 
  * g++ -std=c++11 -O3 test_avlTree.cpp
  * 
+ * To enable parent pointers, compile via:
+ * 
+ * g++ -std=c++11 -O3 -D PARENT test_avlTree.cpp
+ * 
  * To enable selection of a preferred replacment node
  * when a 2-child node is deleted, compile via:
  * 
@@ -56,6 +60,10 @@
  * To disable the freed list that avoids re-use of new and delete, compile via:
  * 
  * g++ -std=c++11 -O3 -D DISABLE_FREED_LIST test_avlTree.cpp
+ * 
+ * To preallocate the freed list as a vector of avl tree nodes, compile via:
+ * 
+ * g++ -std=c++11 -O3 -D PREALLOCATE test_avlTree.cpp
  */
 
 #ifndef ADELSON_VELSKII_LANDIS_WIRTH_AVL_TREE_RECURSE_H
@@ -82,14 +90,28 @@ private:
         K key;          // the key stored in this node
         bal_t bal;      // the left/right balance that assumes values of -1, 0, or +1
         Node *left, *right;
+#ifdef PARENT
+        Node* parent ;
+#endif
        
         Node( K const& x, bool& h ) {
             h = true;  // the height has changed
             bal = 0;   // the subtree is balanced at this node
             key = x;
             left = right = nullptr;
-        }
-    };
+#ifdef PARENT
+            parent = nullptr;
+# endif
+       }
+
+       Node() {
+            bal = 0;   // the subtree is balanced at this node
+            left = right = nullptr;
+#ifdef PARENT
+            parent = nullptr;
+# endif
+   }
+};
 
 public:
     size_t nodeSize() {
@@ -100,8 +122,12 @@ private:
     Node* root;     // the root of the tree
     size_t count;   // the number of nodes in the tree
     bool h, a, r;   // record modification of the tree
+
 #ifndef DISABLE_FREED_LIST
     Node* freed;    // the freed list
+#ifdef PREALLOCATE
+    std::vector<Node> nodes;
+#endif
 #endif
   
 public:
@@ -156,11 +182,16 @@ public:
 private:
     void clearFreed() {
 #ifndef DISABLE_FREED_LIST
+#ifndef PREALLOCATE
         while ( freed != nullptr ) {
             Node* next = freed->left;
             delete freed;
             freed = next;
         }
+#else
+        nodes.clear();
+#endif
+        freed = nullptr;
 #endif
     }
 
@@ -187,6 +218,9 @@ private:
             p->bal = 0;  // the subtree is balanced at this node
             p->key = x;
             p->left = p->right = nullptr;
+#ifdef PARENT
+            p->parent = nullptr;
+#endif
             return p;
         } else
 #endif
@@ -232,17 +266,24 @@ public:
      * Calling parameters:
      *
      * @param n (IN) the number of nodes to prepend
-     * @param x (IN) a dummy key argument
      */
 public:
-    void freedPreallocate( size_t const n, K const& x ) {
+    void freedPreallocate( size_t const n ) {
 #ifndef DISABLE_FREED_LIST
+#ifndef PREALLOCATE
        for (size_t i = 0; i < n; ++i) {
-            bool h;
-            Node* p = new Node( x, h );
+            Node* p = new Node();
             p->left = freed;
             freed = p;
         }
+#else
+        nodes.resize(n);
+        for (size_t i = 0; i < n; ++i) {
+            Node* p = &nodes[i];
+            p->left = freed;
+            freed = p;
+        }
+#endif
 #endif
     }
 
@@ -311,6 +352,22 @@ private:
      * @return true if the key was added as a new node; otherwise, false
      */
 public:
+#ifdef PARENT
+    inline bool insert( K const& x ) {
+        h = false, a = true;
+        if ( root != nullptr ) {
+            root = insert( nullptr, root, x );
+            if ( a == true ) {
+                ++count;
+            }
+        } else {
+            root = newNode( x, h );
+            root->parent = nullptr;
+            ++count;
+        }
+        return a;
+    }
+#else
     inline bool insert( K const& x ) {
         h = false, a = true;
         if ( root != nullptr ) {
@@ -324,6 +381,7 @@ public:
         }
         return a;
     }
+#endif
 
     /*
      * Removes a node from the tree. Then the tree
@@ -371,6 +429,13 @@ private:
                 if ( p1->bal == -1 ) {		// single LL rotation
                     lli++;
                     p->left = p1->right;
+#ifdef PARENT
+                    if ( p->left != nullptr ) {
+                        p->left->parent = p;
+                    }
+                    p1->parent = p->parent;
+                    p->parent = p1;
+#endif
                     p1->right = p;
                     p->bal = 0;
                     p = p1;
@@ -378,8 +443,20 @@ private:
                     lri++;
                     Node* p2 = p1->right;
                     p1->right = p2->left;
+#ifdef PARENT
+                    if ( p1->right != nullptr ) {
+                        p1->right->parent = p1;
+                    }
+#endif
                     p2->left = p1;
                     p->left = p2->right;
+#ifdef PARENT
+                    if ( p->left != nullptr ) {
+                        p->left->parent = p;
+                    }
+                    p->parent = p1->parent = p2;
+                    p2->parent = p->parent;
+#endif
                     p2->right = p;
                     if ( p2->bal == -1 ) {
                         p->bal = 1;
@@ -424,6 +501,13 @@ private:
                 if ( p1->bal == 1 ) {       // single RR rotation
                     rri++;
                     p->right = p1->left;
+#ifdef PARENT
+                    if ( p->right != nullptr ) {
+                        p->right->parent = p;
+                    }
+                    p1->parent = p->parent;
+                    p->parent = p1;
+#endif
                     p1->left = p;
                     p->bal = 0;
                     p = p1;
@@ -431,8 +515,20 @@ private:
                     rli++;
                     Node* p2 = p1->left;
                     p1->left = p2->right;
+#ifdef PARENT
+                    if ( p1->left != nullptr ) {
+                        p1->left->parent = p1;
+                    }
+#endif
                     p2->right = p1;
                     p->right = p2->left;
+#ifdef PARENT
+                    if ( p->right != nullptr ) {
+                        p->right->parent = p;
+                    }
+                    p->parent = p1->parent = p2;
+                    p2->parent = p->parent;
+#endif
                     p2->left = p;
                     if ( p2->bal == 1 ) {
                         p->bal = -1;
@@ -462,12 +558,51 @@ private:
      *
      * Calling parameter:
      *
-     * @param p (IN) the root of the subtree at this leve of recursion
+     * @param q (IN) pointer to parent of the root of the subtree
+     * @param p (IN) the root of the subtree at this level of recursion
      * @param x (IN) the key to add to the tree
      * 
      * @return the root of the rebalanced subtree
      */
 public:
+#ifdef PARENT
+    Node* insert( Node* q, Node* p,  K const& x ) {
+        
+        if ( x < p->key ) {                         // search the left branch?
+            if ( p->left != nullptr ) {
+                p->left = insert( p, p->left, x );
+            } else {
+                Node* r = newNode( x, h );
+                r->parent = q;
+                p->left = r;
+                a = true;
+            }
+            if ( h ) {                              // left branch has grown higher
+                p = balanceInsertLeft( p );
+            }
+        } else if ( x > p->key ) {                  // search the right branch?
+            if ( p->right != nullptr ) {
+                p->right = insert( p, p->right, x );
+            } else {
+                Node*r = newNode( x, h );
+                r->parent = q;
+                p->right = r;
+                a = true;
+            }
+            if ( h ) {                              // right branch has grown higher
+                p = balanceInsertRight( p );
+            }
+        } else {
+            // The key is already in the tree.
+            // For a tree, don't insert the key twice.
+            // For a map, overwrite the value.
+            h = false;
+            a = false;
+        }
+
+        return p;  // the root of the rebalanced subtree
+    }
+#else
     Node* insert( Node* p,  K const& x ) {
         
         if ( x < p->key ) {                         // search the left branch?
@@ -500,6 +635,7 @@ public:
 
         return p;  // the root of the rebalanced subtree
     }
+#endif
     
     /*
      * Rebalance following deletion of a left node.
@@ -526,6 +662,13 @@ private:
                 if ( p1->bal >= 0 ) {   // single RR rotation
                     rre++;
                     p->right = p1->left;
+#ifdef PARENT
+                    if ( p->right != nullptr ) {
+                        p->right->parent = p;
+                    }
+                    p1->parent = p->parent;
+                    p->parent = p1;
+#endif
                     p1->left = p;
                     if ( p1->bal == 0 ) {
                         p->bal = 1;
@@ -540,8 +683,20 @@ private:
                     rle++;
                     Node* p2 = p1->left;
                     p1->left = p2->right;
+#ifdef PARENT
+                    if ( p1->left != nullptr ) {
+                        p1->left->parent = p1;
+                    }
+#endif
                     p2->right = p1;
                     p->right = p2->left;
+#ifdef PARENT
+                    if ( p->right != nullptr ) {
+                        p->right->parent = p;
+                    }
+                    p->parent = p1->parent = p2;
+                    p2->parent = p->parent;
+#endif
                     p2->left = p;
                     if ( p2->bal == 1 ) {
                         p->bal = -1;
@@ -586,6 +741,13 @@ private:
                 if ( p1->bal <= 0 ) {   // single LL rotation
                     lle++;
                     p->left = p1->right;
+#ifdef PARENT
+                    if ( p->left != nullptr ) {
+                        p->left->parent = p;
+                    }
+                    p1->parent = p->parent;
+                    p->parent = p1;
+#endif
                     p1->right = p;
                     if ( p1->bal == 0 ) {
                         p->bal = -1;
@@ -600,8 +762,20 @@ private:
                     lre++;
                     Node* p2 = p1->right;
                     p1->right = p2->left;
+#ifdef PARENT
+                    if ( p1->right != nullptr ) {
+                        p1->right->parent = p1;
+                    }
+#endif
                     p2->left = p1;
                     p->left = p2->right;
+#ifdef PARENT
+                    if ( p->left != nullptr ) {
+                        p->left->parent = p;
+                    }
+                    p->parent = p1->parent = p2;
+                    p2->parent = p->parent;
+#endif
                     p2->right = p;
                     if ( p2->bal == -1 ) {
                         p->bal = 1;

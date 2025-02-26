@@ -72,6 +72,14 @@
  * 
  * g++ -std=c++11 -O3 -D DISABLE_FREED_LIST test_llrbTree.cpp
  * 
+ * To preallocate the freed list as a vector of avl tree nodes, compile via:
+ * 
+ * g++ -std=c++11 -O3 -D PREALLOCATE test_llrbTree.cpp
+ * 
+ * To enable parent pointers, compile via:
+ * 
+ * g++ -std=c++11 -O3 -D PARENT test_llrbTree.cpp
+ * 
  * To enable selection of a preferred replacement node
  * when a 2-child node is deleted, compile via:
  * 
@@ -129,15 +137,33 @@ private:
         K key;
         color_t color;
         Node *left, *right;
+#ifdef PARENT
+        Node* parent ;
+#endif
+
 #ifdef ENABLE_PREFERRED_TEST
         size_t taille; /* the number of nodes in this subtree */
 #endif
 
-    public:
         Node( K const& x, bool const c ) {
             key = x;
             color = c;
             left = right = nullptr;
+#ifdef PARENT
+            parent = nullptr;
+#endif
+
+#ifdef ENABLE_PREFERRED_TEST
+            taille = 1;
+#endif
+        }
+
+        Node() {
+            left = right = nullptr;
+#ifdef PARENT
+            parent = nullptr;
+#endif
+
 #ifdef ENABLE_PREFERRED_TEST
             taille = 1;
 #endif
@@ -150,9 +176,16 @@ public:
     }
 
 private:
-    Node *root, *freed;
-    size_t count;  /* the number of nodes in the tree */
-    bool a, r;     /* record modification of the tree */
+    Node* root;     // the root of the tree
+    size_t count;   // the number of nodes in the tree
+    bool a, r;      // record modification of the tree
+
+#ifndef DISABLE_FREED_LIST
+    Node* freed;    // the freed list
+#ifdef PREALLOCATE
+    std::vector<Node> nodes;
+#endif
+#endif
   
 public:
     size_t rotateL, rotateR; // rotation counters
@@ -213,11 +246,16 @@ public:
 private:
     void clearFreed() {
 #ifndef DISABLE_FREED_LIST
+#ifndef PREALLOCATE
         while ( freed != nullptr ) {
             Node* next = freed->left;
             delete freed;
             freed = next;
         }
+#else
+        nodes.clear();
+#endif
+        freed = nullptr;
 #endif
     }
 
@@ -241,16 +279,24 @@ public:
      * Calling parameters:
      *
      * @param n (IN) the number of nodes to prepend
-     * @param x (IN) a dummy key argument
      */
 public:
-    inline void freedPreallocate( size_t const n, K const& x ) {
- #ifndef DISABLE_FREED_LIST
+    void freedPreallocate( size_t const n ) {
+#ifndef DISABLE_FREED_LIST
+#ifndef PREALLOCATE
        for (size_t i = 0; i < n; ++i) {
-            Node* p = new Node( x, RED );
+            Node* p = new Node();
             p->left = freed;
             freed = p;
-       }
+        }
+#else
+        nodes.resize(n);
+        for (size_t i = 0; i < n; ++i) {
+            Node* p = &nodes[i];
+            p->left = freed;
+            freed = p;
+        }
+#endif
 #endif
     }
 
@@ -293,6 +339,9 @@ private:
             ptr->taille = 1;
 #endif
             ptr->left = ptr->right = nullptr;
+#ifdef PARENT
+            ptr->parent = nullptr;
+#endif
             return ptr;
         } else
 #endif
@@ -355,6 +404,34 @@ public:
      * @return the right child of the node
      */
 private:
+#ifdef PARENT
+    inline Node* rotateLeft( Node* const p ) {
+        if ( p == nullptr || p->right == nullptr ) {
+            return p;
+        }
+
+        ++rotateL;
+
+        Node* p1 = p->right;
+
+        p->right = p1->left;
+        if (p->right != nullptr) {
+            p->right->parent = p;
+        }
+        p1->parent = p->parent;
+        p1->left = p;
+        p->parent = p1;
+
+        p1->color = p->color;
+        p->color = RED;
+
+#ifdef ENABLE_PREFERRED_TEST
+        p1->taille = p->taille;
+        p->taille = updateSize(p);
+#endif
+        return p1;
+    }
+#else
     inline Node* rotateLeft( Node* const p ) {
         if ( p == nullptr || p->right == nullptr ) {
             return p;
@@ -376,6 +453,7 @@ private:
 #endif
         return p1;
     }
+#endif
 
     /*
      * If possible, rotate right about a node, which
@@ -388,6 +466,34 @@ private:
      * @return the right child of the node
      */
 private:
+#ifdef PARENT
+    inline Node* rotateRight( Node* const p ) {
+        if (p == nullptr || p->left == nullptr) {
+            return p;
+        }
+
+        ++rotateR;
+
+        Node* p1 = p->left;
+
+        p->left = p1->right;
+        if (p->left != nullptr) {
+            p->left->parent = p;
+        }
+        p1->parent = p->parent;
+        p1->right = p;
+        p->parent = p1;
+
+        p1->color = p->color;
+        p->color = RED;
+
+#ifdef ENABLE_PREFERRED_TEST
+        p1->taille = p->taille;
+        p->taille = updateSize(p);
+#endif
+        return p1;
+    }
+#else
     inline Node* rotateRight( Node* const p ) {
         if (p == nullptr || p->left == nullptr) {
             return p;
@@ -409,6 +515,7 @@ private:
 #endif
         return p1;
     }
+#endif
 
     /*
      * If possible, complement the colors of a node
@@ -456,12 +563,52 @@ private:
      *
      * Calling parameters:
      *
-     * @param p (IN) pointer a node
-     * @param x (IN) the key to add to the tree
+     * @param q (IN) pointer to parent of the root of the subtree
+     * @param p (IN) the root of the subtree at this level of recursion
+     * @param q (IN) pointer to parent of the root of the subtree
+     * @param p (IN) the root of the subtree at this level of recursion
+      * @param x (IN) the key to add to the tree
      * 
      * @return the root of the rebalanced sub-tree
      */
 private:
+#ifdef PARENT
+    Node* insert( Node* q, Node* p, K const& x ) {
+        
+        if (p == nullptr) {
+            a = true;
+            ++count;
+            Node* r = newNode( x, RED ); // Add a RED node at a leaf.
+            r->parent = q;
+            return r;
+        }
+
+        if (x < p->key) {
+            p->left = insert( p, p->left, x );
+        } else if (x > p->key) {
+            p->right = insert( p, p->right, x );
+        } else {
+            // For a tree, don't insert the key twice.
+            // For a map, overwrite the value.
+            a = false;
+        }
+
+        if (isRed(p->right) && !isRed(p->left)) {
+            p = rotateLeft(p);
+        }
+        if (isRed(p->left) && isRed(p->left->left)) {
+            p = rotateRight(p);
+        }
+        if (isRed(p->left) && isRed(p->right)) {
+            flipColors(p);
+        }
+        
+#ifdef ENABLE_PREFERRED_TEST
+        p->taille = updateSize(p);
+#endif
+        return p;
+    }
+#else
     Node* insert( Node* p, K const& x ) {
         
         if (p == nullptr) {
@@ -495,6 +642,7 @@ private:
 #endif
         return p;
     }
+#endif
 
 private:
     inline Node* balance( Node* p ) {
@@ -1086,6 +1234,22 @@ public:
      * @return true if the key was added as a new node; otherwise, false
      */
 public:
+#ifdef PARENT
+    inline bool insert( K const& x ) {
+        a = false;
+
+        if ( root != nullptr ) {
+            root = insert( nullptr, root, x );
+            root->color = BLACK; // Enforce a BLACK root.
+        } else {
+            root = newNode( x, BLACK ); // Add a BLACK node at the root;
+            root->parent = nullptr;
+            a = true;
+            ++count;
+        }
+        return a;
+    }
+#else
     inline bool insert( K const& x ) {
         a = false;
 
@@ -1099,6 +1263,7 @@ public:
         }
         return a;
     }
+#endif
 
     /*
      * Remove a node from the LL RB tree and then rebalance the tree.

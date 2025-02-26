@@ -64,6 +64,10 @@
  * 
  * g++ -std=c++11 -O3 -D DISABLE_FREED_LIST test_hyrbTree.cpp
  * 
+ * To preallocate the freed list as a vector of red-black tree nodes, compile via:
+ * 
+ * g++ -std=c++11 -O3 -D PREALLOCATE test_hyrbTree.cpp
+ * 
  * To use a non-static sentinel node nullnode instead of nullptr, compile via:
  * 
  * g++ -std=c++11 -O3 -D NULL_NODE test_hyrbTree.cpp
@@ -122,13 +126,11 @@ private:
         color_t color;
         Node *left, *right, *parent;
 
-public:
         Node() {
             color = RED;
             left = right = parent = nullptr;
         }
 
-public:
         Node(K const& x) {
             key = x;
             color = RED;
@@ -182,11 +184,14 @@ private:
 
         
 private:
-    Node* root;
-    size_t count; // the number of nodes in the tree
+    Node* root;     // the root of the tree
+    size_t count;   // the number of nodes in the tree
 
 #ifndef DISABLE_FREED_LIST
-    Node* freed;
+    Node* freed;    // the freed list
+#ifdef PREALLOCATE
+    std::vector<Node> nodes;
+#endif
 #endif
 
 public:
@@ -282,14 +287,19 @@ public:
     }
 
     /* Delete every node from the freed list. */
-private:
+    private:
     void clearFreed() {
 #ifndef DISABLE_FREED_LIST
+#ifndef PREALLOCATE
         while ( freed != nulle ) {
             Node* next = freed->left;
             delete freed;
             freed = next;
         }
+#else
+        nodes.clear();
+#endif
+        freed = nulle;
 #endif
     }
 
@@ -316,12 +326,27 @@ public:
      */
 public:
     void freedPreallocate( size_t const n ) {
- #ifndef DISABLE_FREED_LIST
+#ifndef DISABLE_FREED_LIST
+#ifndef PREALLOCATE
        for (size_t i = 0; i < n; ++i) {
             Node* p = createNode();
             p->left = freed;
             freed = p;
-       }
+        }
+#else
+        nodes.resize(n);
+        for (size_t i = 0; i < n; ++i) {
+            Node* p = &nodes[i];
+#if defined(NULL_NODE) || defined(STATIC_NULL_NODE)
+            // The Node() constructor does not recognize nullnode
+            // when nullnode is defined as a Node pointer. See
+            // the createNode functions.
+            p->left = p->right = p->parent = nulle;
+#endif
+            p->left = freed;
+            freed = p;
+        }
+#endif
 #endif
     }
 
