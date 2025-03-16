@@ -47,6 +47,10 @@
  * 
  * g++ -std=c++11 -O3 -D DELETE_REVORDER -o test_avlTree test_avlTree.cpp
  * 
+ * To only insert and delete without verifying or searching, compile via:
+ * 
+ * g++ -std=c++11 -O3 -D INSERT_DELETE_ONLY -o test_avlTree test_avlTree.cpp
+ * 
  * The avlTree.h file describes compilation options.
  * 
  * Usage:
@@ -197,6 +201,7 @@ int main(int argc, char **argv) {
         rri[it] = root.rri;
         ri[it] = root.lli + 2*(root.lri + root.rli) + root.rri;
 
+#ifndef INSERT_DELETE_ONLY
         // Verify that the correct number of keys were added to the tree.
         treeSize = root.size();
         if (treeSize != insertNumbers.size()) {
@@ -223,6 +228,7 @@ int main(int argc, char **argv) {
         endTime = std::chrono::steady_clock::now();
         duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
         searchTime[it] = static_cast<double>(duration.count()) / 1000000.;
+#endif
 
         // Reset the deletion rotation counters to 0.
         root.lle = root.lre = root.rle = root.rre = 0;

@@ -43,6 +43,10 @@
  * 
  * g++ -std=c++11 -O3 -D DELETE_INORDER -o test_tdrbTree test_tdrbTree.cpp
  * 
+ * To only insert and delete without verifying or searching, compile via:
+ * 
+ * g++ -std=c++11 -O3 -D INSERT_DELETE_ONLY -o test_tdrbTree test_tdrbTree.cpp
+ * 
  * The tdrbTree.h file describes other compilation options.
  * 
  * Usage:
@@ -191,6 +195,7 @@ int main(int argc, char **argv) {
         // A double rotation also counts 2 single rotations
         ri[it] = root.singleRotationCount - 2*root.doubleRotationCount;
 
+#ifndef INSERT_DELETE_ONLY
         // Verify that the correct number of nodes were added to the TDRB tree.
         treeSize = root.size();
         if (treeSize != insertNumbers.size()) {
@@ -218,6 +223,7 @@ int main(int argc, char **argv) {
         endTime = std::chrono::steady_clock::now();
         duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
         searchTime[it] = static_cast<double>(duration.count()) / 1000000.;
+#endif
 
         // Reset the rotation counters to 0.
         root.singleRotationCount = root.doubleRotationCount = 0;

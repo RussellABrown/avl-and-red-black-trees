@@ -47,6 +47,10 @@
  * 
  * g++ -std=c++11 -O3 -D DELETE_REVORDER -o test_burbTree test_hyrbTree.cpp
  * 
+ * To only insert and delete without verifying or searching, compile via:
+ * 
+ * g++ -std=c++11 -O3 -D INSERT_DELETE_ONLY -o test_hyrbTree test_hyrbTree.cpp
+ * 
  * The hyrbTree.h file describes other compilation options.
  * 
  * Usage:
@@ -225,6 +229,7 @@ int main(int argc, char **argv) {
             throw runtime_error(buffer.str());
         }
 
+#ifndef INSERT_DELETE_ONLY
         // Verify that each path to the bottom of the string tree has an equal
         // number of BLACK nodes and check the validity of the tree.
         root.checkTree();
@@ -243,6 +248,7 @@ int main(int argc, char **argv) {
         endTime = std::chrono::steady_clock::now();
         duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
         searchTime[it] = static_cast<double>(duration.count()) / 1000000.;
+#endif
 
         // Reset the deletion rotation counters to 0.
         root.rotateL = root.rotateR = 0;
