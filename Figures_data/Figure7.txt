@@ -1,0 +1,15 @@
+# i7 14th gen. in-order delete time vs number of nodes
+# N = number of nodes
+# AV = AVL customary
+# AP = AVL alternative
+# BU = bottom-up red-black customary
+# BP = bottom-up red-black preferred
+# TD = top-down red-black
+# LL = left-leaning red-black
+# SS = std::set
+N	AV	AP	BU	BP	TD	LL	SS
+65536	.001936	.002073	.001471	.002235	.004706	.01313	.001946
+131072	.003955	.004315	.002857	.004555	.01198	.02892	.003845
+262144	.008309	.009165	.006529	.01045	.02925	.06375	.008513
+524288	.01837	.01993	.0166	.02283	.06532	.1366	.0181
+1048576	.03883	.0421	.04564	.05388	.1465	.2954	.041

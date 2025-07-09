@@ -1,0 +1,14 @@
+# i7 14th gen. random delete rotations vs number of nodes
+# N = number of nodes
+# AV = AVL customary
+# AP = AVL alternative
+# BU = bottom-up red-black customary
+# BP = bottom-up red-black alternative
+# TD = top-down red-black
+# LL = left-leaning red-black
+N	AV	AP	BU	BP	TD	LL
+65536	24461	19532	24846	18902	176723	422468
+131072	48924	39070	49693	37809	371152	903997
+262144	97852	78141	99403	75625	780448	1915904
+524288	195718	156289	198807	151272	1636941	4056902
+1048576	391423	312587	397646	302552	3406374	8624869

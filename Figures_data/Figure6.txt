@@ -1,0 +1,13 @@
+# Number of nodes vs. i7 14th gen. in order insert time data
+# N = number of nodes
+# AV = AVL
+# BU = bottom-up red-black
+# TD = top-down red-black
+# LL = left-leaning red-black
+# SS = std::set
+N	AV	BU	TD	LL	SS
+65536	.002739	.005013	.007259	.008364	.005357
+131072	.005965	.01093	.01673	.01809	.01338
+262144	.01237	.02698	.03854	.03985	.03276
+524288	.02793	.06393	.08355	.08546	.07447
+1048576	.06407	.1438	.1843	.1875	.1668

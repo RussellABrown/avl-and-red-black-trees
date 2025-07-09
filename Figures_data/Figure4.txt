@@ -1,0 +1,13 @@
+# i7 14th gen. random insert time vs number of nodes
+# N = number of nodes
+# AV = AVL
+# BU = bottom-up red-black
+# TD = top-down red-black
+# LL = left-leaning red-black
+# SS = std::set
+N	AV	BU	TD	LL	SS
+65536	.01237	.012	.0119	.01526	.008596
+131072	.02959	.02862	.02804	.03657	.02106
+262144	.07567	.07253	.07086	.09191	.05282
+524288	.1942	.185	.1844	.2295	.1346
+1048576	.5072	.48	.5076	.6174	.3875

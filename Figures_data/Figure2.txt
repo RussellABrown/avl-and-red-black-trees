@@ -1,0 +1,12 @@
+# Number of nodes vs. 17 14th gen. random insert rotations data
+# N = number of nodes
+# AV = AVL 
+# BU = bottom-up red-black
+# TD = top-down red-black
+# LL = left-leaning red-black
+N	AV	BU	TD	LL
+65536	45757	38172	38667	77759
+131072	91517	76344	77336	155527
+262144	183046	152705	154689	311085
+524288	366088	305386	309360	622170
+1048576	732184	610797	618743	1244412
