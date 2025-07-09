@@ -1,6 +1,12 @@
-The C++ implementation of an AVL tree achieves improved performance for AVL node deletion via the algorithm proposed by Caxton C. Foster in his 1965 article, "A Study of AVL Trees" (Goodyear Aerospace Corporation internal document GER-12158), and also described in the following pre-print article.
+The C++ implementation of an AVL tree achieves improved performance for AVL node deletion via the algorithm proposed by Caxton C. Foster in his 1965 article, "A Study of AVL Trees" (Goodyear Aerospace Corporation internal document GER-12158), and also described in the following pre-print article:
 
 https://arxiv.org/abs/2406.05162
+
+as well as in the final article that appears in Software: Practice and Experience:
+
+https://doi.org/10.1002/spe.3437
+
+The data plotted in Figures 2-8 of these articles is found in the Figures_data directory.
 
 The AVL tree implementation (avlTree.h, test_avlTree.cpp, and testAVLTree.cpp) was transcribed from Nicklaus Wirth's Pascal implementation of the AVL tree in his 1976 textbook, "Algorithms + Data Structures = Programs." A bug in the del procedure was fixed and that procedure was bifurcated to create the eraseLeft and eraseRight functions that confer improved performance for deletion.
 
