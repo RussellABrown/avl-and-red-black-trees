@@ -2,7 +2,7 @@ The C++ implementation of an AVL tree achieves improved performance for AVL node
 
 https://arxiv.org/abs/2406.05162
 
-as well as in the final article that appears in Software: Practice and Experience:
+as well as in the final article that appears in Software: Practice and Experience 55(9):1607,2025:
 
 https://doi.org/10.1002/spe.3437
 
